@@ -3,7 +3,7 @@ module "postgresql_database" {
   project_name   = var.project_name
   resource_group = azurerm_resource_group.main
   disk_size = var.postgres_disk_size
-  key_vault_id = module.keyvault.key_vault_id
+  key_vault_id = var.key_vault_id
   subnet_id = module.vpc.postgresql_subnet_id
   network_id          = module.vpc.network_id
   tags = local.default_tags
@@ -13,7 +13,7 @@ module "redis" {
   source = "./redis-cache-module/"
   project_name   = var.project_name
   resource_group = azurerm_resource_group.main
-  key_vault_id = module.keyvault.key_vault_id
+  key_vault_id = var.key_vault_id
   subnet_id = module.vpc.redis_subnet_id
   network_id = module.vpc.network_id
   tags = local.default_tags
@@ -22,7 +22,7 @@ module "redis" {
 module "mongo_atlas" {
   source                    = "./mongo-atlas-database/"
   resource_group            = azurerm_resource_group.main
-  key_vault_id              = module.keyvault.key_vault_id
+  key_vault_id              = var.key_vault_id
   project_id                = var.project_name
   subnet_id                 = module.vpc.mongo_atlas_subnet_id
   atlas_org_id              = var.atlas_org_id
