@@ -58,3 +58,22 @@ resource "azurerm_private_dns_zone_virtual_network_link" "postgres_dns_link" {
 
   tags = var.tags
 }
+
+resource "random_password" "postgres" {
+  length           = 20
+  special          = false
+  override_special = "_"
+  min_lower        = 1
+  min_upper        = 1
+  min_numeric      = 1
+  min_special      = 1
+}
+
+#tfsec:ignore:azure-keyvault-ensure-secret-expiry
+resource "azurerm_key_vault_secret" "postgres_password" {
+  name         = "${var.project_name}-postgres-password"
+  value        = random_password.postgres.result
+  key_vault_id = var.key_vault_id
+
+  tags = var.tags
+}
