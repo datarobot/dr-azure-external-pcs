@@ -3,8 +3,13 @@ variable "project_name" {
   type        = string
 }
 
-variable "resource_group" {
+variable "resource_group_name" {
   description = "Azure Resource Group"
+  type        = any
+}
+
+variable "resource_group_location" {
+  description = "Azure resource group location"
   type        = any
 }
 
@@ -37,5 +42,10 @@ variable "key_vault_id" {
 
 variable "network_id" {
   description = "Network id for private dns access"
+  type        = string
+}
+
+variable "postgresql_version" {
+  description = "Postgres db engine version"
   type        = string
 }
