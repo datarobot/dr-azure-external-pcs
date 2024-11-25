@@ -1,9 +1,19 @@
+variable "environment" {
+  description = "Environment to deploy can be (dev,prod)"
+  type        = string
+}
+
 variable "project_id" {
   description = "Azure project ID"
   type        = string
 }
 
-variable "resource_group" {
+variable "resource_group_name" {
+  description = "Azure Resource Group"
+  type        = any
+}
+
+variable "resource_group_location" {
   description = "Azure Resource Group"
   type        = any
 }
@@ -63,17 +73,12 @@ variable "vpc_id" {
   type        = string
 }
 
-variable "atlas_slack" {
-  description = "slack api key"
-  type        = string
-}
-
 variable "subnet_id" {
   type        = string
   description = "Subnet id for atlas"
 }
 
-variable "mongodb_version" {
+variable "atlas_mongodb_version" {
   description = "mongodb cluster version"
   type        = string
 }
@@ -83,17 +88,37 @@ variable "cidr_block" {
   type        = string
 }
 
-variable "db_audit_enable" {
-  type        = bool
-  description = "Enable database auditing for production instances only(cost incurred 10%)"
-}
-
 variable "chosen_copy_region" {
   type        = string
   description = "get current region cluster is provisioned"
 
   validation {
     condition     = var.chosen_copy_region != null
-    error_message = "chosen_copy_region must be set to a valid region, add a region if it does not exist"
+    error_message = "Chosen_copy_region must be set to a valid region, add a region if it does not exist."
   }
+}
+
+variable "termination_protection_enabled" {
+  type        = bool
+  description = "Enable termination for atlas cluster instances."
+}
+
+variable "atlas_num_shards" {
+  type        = number
+  description = "Number of shards if sharded cluster else default is 1"
+}
+
+variable "network_id" {
+  type        = string
+  description = "Network id in azure where resources need to be provisioned"
+}
+
+variable "pit_enabled" {
+  type        = bool
+  description = "Point in time restore for mongodb"
+}
+
+variable "atlas_cluster_type" {
+  type        = string
+  description = "Atlas cluster type either REPLICASET or SHARDED"
 }
