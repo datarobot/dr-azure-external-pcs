@@ -1,10 +1,4 @@
-# public and private api key to authenticate and create resources in atlas
-provider "mongodbatlas" {
-  public_key  = var.atlas_public_key
-  private_key = var.atlas_private_key
-}
-
-resource "mongodbatlas_project" "azure_atlas" {
+resource "mongodbatlas_project" "azure_atlas_project" {
   name   = "${var.atlas_project_name}-pmi"
   org_id = var.atlas_org_id
 
@@ -18,7 +12,7 @@ resource "mongodbatlas_project" "azure_atlas" {
 # Mongo atlas cluster to be created
 resource "mongodbatlas_advanced_cluster" "azure_mongo_atlas_cluster" {
   project_id                     = mongodbatlas_project.azure_atlas_project.id
-  name                           = "${var.atlas_project_name}-${var.env}"
+  name                           = "${var.atlas_project_name}-${var.environment}"
   cluster_type                   = var.atlas_cluster_type
   pit_enabled                    = var.pit_enabled
   termination_protection_enabled = var.termination_protection_enabled
@@ -28,7 +22,7 @@ resource "mongodbatlas_advanced_cluster" "azure_mongo_atlas_cluster" {
     num_shards = var.atlas_num_shards
     region_configs {
       provider_name = "AZURE"
-      region_name   = var.azure_atlas_region
+      region_name   = var.atlas_azure_region
       priority      = 7
       electable_specs {
         instance_size = var.atlas_instance_type
@@ -93,41 +87,30 @@ resource "mongodbatlas_cloud_backup_schedule" "azure_mongo_atlas_automated_cloud
 
 
 resource "mongodbatlas_database_user" "azure_mongo_atlas_db_user" {
-  for_each           = { for user in var.names : user.username => user }
-  username           = each.value.username
-  password           = random_password.azure_atlas_mongo_password_generator[each.key].result
+  username           = var.atlas_db_user
+  password           = random_password.azure_atlas_mongo_password_generator.result
   auth_database_name = "admin"
-  project_id         = mongodbatlas_project.azure_atlas.id
-
-  dynamic "roles" {
-    for_each = each.value.roles
-
-    content {
-      role_name     = roles.value.role_name
-      database_name = roles.value.database_name
-    }
-
+  project_id         = mongodbatlas_project.azure_atlas_project.id
+  roles {
+    role_name     = "readWrite"
+    database_name = "admin"
   }
-  dynamic "scopes" {
-    for_each = each.value.scopes
-
-    content {
-      name = scopes.value.name
-      type = scopes.value.type
-    }
+  roles {
+    role_name     = "atlasAdmin"
+    database_name = "admin"
   }
 }
 
 resource "mongodbatlas_privatelink_endpoint" "atlaspl" {
-  project_id    = mongodbatlas_project.azure_atlas.id
+  project_id    = mongodbatlas_project.azure_atlas_project.id
   provider_name = "AZURE"
   region        = var.azure_region
 }
 
 resource "azurerm_private_endpoint" "ptfe_service" {
   name                = "${var.atlas_project_name}-atlas"
-  location            = var.resource_group.location
-  resource_group_name = var.resource_group.name
+  location            = var.resource_group_location
+  resource_group_name = var.resource_group_name
   subnet_id           = var.subnet_id
   tags                = var.tags
   private_service_connection {
@@ -148,37 +131,15 @@ resource "mongodbatlas_privatelink_endpoint_service" "atlaseplink" {
 }
 
 resource "mongodbatlas_project_ip_access_list" "cidr_whitelist" {
-  project_id = mongodbatlas_project.azure_atlas.id
+  project_id = mongodbatlas_project.azure_atlas_project.id
   cidr_block = var.cidr_block
   comment    = "cidr block for AZURE VPC"
 }
 
-resource "mongodbatlas_project_ip_access_list" "harness_whitelist" {
-  project_id = mongodbatlas_project.azure_atlas.id
-  ip_address = var.harness_delegate_publicip
-  comment    = "IP address for Harness delegate"
-}
-
-resource "mongodbatlas_database_user" "db-user" {
-  username           = var.atlas_db_user
-  password           = random_password.atlas_dbpassword.result
-  auth_database_name = "admin"
-  project_id         = mongodbatlas_project.azure_atlas.id
-  roles {
-    role_name     = "readWrite"
-    database_name = "admin"
-  }
-  roles {
-    role_name     = "atlasAdmin"
-    database_name = "admin"
-  }
-  depends_on = [mongodbatlas_project.azure_atlas]
-}
-
 resource "azurerm_network_security_group" "mongo_atlas_pl" {
   name                = "${var.atlas_project_name}-atlas"
-  location            = var.resource_group.location
-  resource_group_name = var.resource_group.name
+  location            = var.resource_group_location
+  resource_group_name = var.resource_group_name
 
   security_rule {
     name                       = "mongo-atlas-pl-sg"
@@ -194,7 +155,7 @@ resource "azurerm_network_security_group" "mongo_atlas_pl" {
   tags = var.tags
 }
 
-resource "random_password" "atlas_dbpassword" {
+resource "random_password" "azure_atlas_mongo_password_generator" {
   length           = 20
   special          = false
   override_special = "_"
@@ -207,7 +168,7 @@ resource "random_password" "atlas_dbpassword" {
 #tfsec:ignore:azure-keyvault-ensure-secret-expiry
 resource "azurerm_key_vault_secret" "atlas_dbpass" {
   name         = "${var.atlas_project_name}-mongo-password"
-  value        = random_password.atlas_dbpassword.result
+  value        = random_password.azure_atlas_mongo_password_generator.result
   key_vault_id = var.key_vault_id
   tags         = var.tags
 }
