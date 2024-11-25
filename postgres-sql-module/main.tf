@@ -1,9 +1,9 @@
 resource "azurerm_postgresql_flexible_server" "postgres_instance" {
   name                = var.project_name
-  location            = var.resource_group.location
-  resource_group_name = var.resource_group.name
+  location            = var.resource_group_location
+  resource_group_name = var.resource_group_name
 
-  version             = "12"
+  version             = var.postgresql_version
   delegated_subnet_id = var.subnet_id
   private_dns_zone_id = azurerm_private_dns_zone.postgres_dns_zone.id
 
@@ -14,12 +14,10 @@ resource "azurerm_postgresql_flexible_server" "postgres_instance" {
   auto_grow_enabled = true
 
   sku_name = var.db_instance_sku
-  # TODO: Get this dynamically
-  zone = 2
+  zone     = 2
 
   high_availability {
-    mode = "ZoneRedundant"
-    # TODO: Get this dynamically
+    mode                      = "ZoneRedundant"
     standby_availability_zone = 1
   }
 
@@ -47,12 +45,12 @@ resource "azurerm_postgresql_flexible_server_configuration" "postgresql_extensio
 
 resource "azurerm_private_dns_zone" "postgres_dns_zone" {
   name                = "sts.${var.project_name}.postgres.database.azure.com"
-  resource_group_name = var.resource_group.name
+  resource_group_name = var.resource_group_name
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "postgres_dns_link" {
   name                  = "${var.project_name}-postgres"
-  resource_group_name   = var.resource_group.name
+  resource_group_name   = var.resource_group_name
   private_dns_zone_name = azurerm_private_dns_zone.postgres_dns_zone.name
   virtual_network_id    = var.network_id
 
