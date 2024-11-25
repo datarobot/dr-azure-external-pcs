@@ -3,7 +3,12 @@ variable "project_name" {
   type        = string
 }
 
-variable "resource_group" {
+variable "resource_group_name" {
+  description = "Azure Resource Group"
+  type        = any
+}
+
+variable "resource_group_location" {
   description = "Azure Resource Group"
   type        = any
 }
