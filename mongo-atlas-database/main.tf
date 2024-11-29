@@ -1,5 +1,5 @@
 resource "mongodbatlas_project" "azure_atlas_project" {
-  name   = "${var.atlas_project_name}-pmi"
+  name   = "${var.atlas_project_name}-datarobot"
   org_id = var.atlas_org_id
 
   is_collect_database_specifics_statistics_enabled = true
@@ -108,7 +108,7 @@ resource "mongodbatlas_privatelink_endpoint" "atlaspl" {
 }
 
 resource "azurerm_private_endpoint" "ptfe_service" {
-  name                = "${var.atlas_project_name}-atlas"
+  name                = "${var.atlas_project_name}-dratlas"
   location            = var.resource_group_location
   resource_group_name = var.resource_group_name
   subnet_id           = var.subnet_id
@@ -137,7 +137,7 @@ resource "mongodbatlas_project_ip_access_list" "cidr_whitelist" {
 }
 
 resource "azurerm_network_security_group" "mongo_atlas_pl" {
-  name                = "${var.atlas_project_name}-atlas"
+  name                = "${var.atlas_project_name}-dratlas"
   location            = var.resource_group_location
   resource_group_name = var.resource_group_name
 
